@@ -1,4 +1,4 @@
-# Automated ML Experiment Template
+# Automated ML Experiment Template (PROOF-OF-CONCEPT)
 
 Run ML experiments automatically with Claude Code analyzing and improving results iteratively.
 
@@ -36,6 +36,19 @@ Claude analyzes results → Claude improves code → Repeat → Final REPORT.md
 You need to be aware of the fact this will automatically run AI-generated code when you run runner.py.
 This template does NOT include any kind of sandboxing, the responsibility for sandboxing and outcomes is 
 entirely on the person running the script. The script is provided for educational purposes only.
+
+## What can it do?
+
+This is a proof-of-concept. It can:
+
+ * train a small NN from scratch
+ * train small transformer on synthetic data
+ * fine-tune existing pre-trained transformer
+ * get existing pre-trained transformer and extend it, e.g. add or modify some module
+
+The most ambitious experiment I tried so far injected memory into a pre-trained transformer using gating MLP.
+
+Training script running time is limited 2 hours in runner.py. Feel free to modify if you feel ambitious.  
 
 
 ## Files
@@ -168,6 +181,10 @@ cat status.json
 # Watch logs
 tail -f logs/runner.log
 ```
+
+## Goal
+
+The goal is to show that this is possible.
 
 ## TODO
 
