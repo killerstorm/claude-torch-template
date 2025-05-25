@@ -1,0 +1,167 @@
+# SDK
+
+Programmatically integrate Claude Code into your applications using the SDK.
+
+## Basic SDK usage
+
+The Claude Code SDK allows you to use Claude Code in non-interactive mode from your applications. Here’s a basic example:
+
+````bash
+# Run a single prompt and exit (print mode)
+$ claude -p "Write a function to calculate Fibonacci numbers"
+
+# Using a pipe to provide stdin
+$ echo "Explain this code" | claude -p
+
+# Output in JSON format with metadata
+$ claude -p "Generate a hello world function" --output-format json
+
+# Stream JSON output as it arrives
+$ claude -p "Build a React component" --output-format stream-json
+
+## Advanced usage
+
+### Multi-turn conversations
+
+For multi-turn conversations, you can resume conversations or continue from the most recent session:
+
+```bash
+# Continue the most recent conversation
+$ claude --continue
+
+# Continue and provide a new prompt
+$ claude --continue "Now refactor this for better performance"
+
+# Resume a specific conversation by session ID
+$ claude --resume 550e8400-e29b-41d4-a716-446655440000
+
+# Resume in print mode (non-interactive)
+$ claude -p --resume 550e8400-e29b-41d4-a716-446655440000 "Update the tests"
+
+# Continue in print mode (non-interactive)
+$ claude -p --continue "Add error handling"
+````
+
+### Custom system prompts
+
+You can provide custom system prompts to guide Claude’s behavior:
+
+```bash
+# Override system prompt (only works with --print)
+$ claude -p "Build a REST API" --system-prompt "You are a senior backend engineer. Focus on security, performance, and maintainability."
+
+# System prompt with specific requirements
+$ claude -p "Create a database schema" --system-prompt "You are a database architect. Use PostgreSQL best practices and include proper indexing."
+```
+
+You can also append instructions to the default system prompt:
+
+```bash
+# Append system prompt (only works with --print)
+$ claude -p "Build a REST API" --append-system-prompt "After writing code, be sure to code review yourself."
+```
+
+### MCP Configuration
+
+The Model Context Protocol (MCP) allows you to extend Claude Code with additional tools and resources from external servers. Using the `--mcp-config` flag, you can load MCP servers that provide specialized capabilities like database access, API integrations, or custom tooling.
+
+Create a JSON configuration file with your MCP servers:
+
+```json
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "/path/to/allowed/files"
+      ]
+    },
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_TOKEN": "your-github-token"
+      }
+    }
+  }
+}
+```
+
+Then use it with Claude Code:
+
+```bash
+# Load MCP servers from configuration
+$ claude -p "List all files in the project" --mcp-config mcp-servers.json
+
+# Important: MCP tools must be explicitly allowed using --allowedTools
+# MCP tools follow the format: mcp__$serverName__$toolName
+$ claude -p "Search for TODO comments" \
+  --mcp-config mcp-servers.json \
+  --allowedTools "mcp__filesystem__read_file,mcp__filesystem__list_directory"
+
+# Use an MCP tool for handling permission prompts in non-interactive mode
+$ claude -p "Deploy the application" \
+  --mcp-config mcp-servers.json \
+  --allowedTools="mcp__permissions__approve" \
+  --permission-prompt-tool mcp__permissions__approve
+```
+
+Note: When using MCP tools, you must explicitly allow them using the `--allowedTools` flag. MCP tool names follow the pattern `mcp__<serverName>__<toolName>` where:
+
+*   `serverName` is the key from your MCP configuration file.
+*   `toolName` is the specific tool provided by that server.
+
+This security measure ensures that MCP tools are only used when explicitly permitted.
+
+## Available CLI options
+
+The SDK leverages all the CLI options available in Claude Code. Here are the key ones for SDK usage:
+
+| Flag | Description | Example |
+| --- | --- | --- |
+| `-p`, `-r`, `--print` | Run in non-interactive mode | `$ claude -p 'query'` |
+| `--output-format` | Specify output format (`text`, `json`, `stream-json`) | `$ claude -p --output-format json` |
+| `-r`, `--resume`, `--continue` | Resume a conversation by session ID | `$ claude --resume abc123` |
+| `-c`, `--pause`, `--skip-next-input` | Pause execution until input is provided | \`$ cat mycode.py |
+| `-v`, `--verbose` | Enable verbose logging | `$ claude -v` |
+| `-max-turns`, \`\`---max-turns="" \`\`\`number""="" # Limit agentic turns in non-interactive mode | `$ claude -max-turns 3` |  |
+| `-s`, `\---system-prompt="" ```string""="" # Override system prompt (only with` \---print="" \`\`\` ) | `$ claude -s 'Custom instruction'` |  |
+| `-a`, `\---append-system-prompt="" ```string""="" # Append to system prompt (only with` \---print="" \`\`\` ) | `$ claude -a 'Custom instruction'` |  |
+| `-t`, \`\`---allowed-tools="" \`\`\`string""="" # Comma/space-separated list of allowed tools (includes MCP tools) | `$claude \--allowed-tools Bash(npm install),mcp__filesystem__*` |  |
+| `-d`, \`\`---disallowed-tools="" \`\`\`string""="" # Comma/space-separated list of denied tools | `$claude \--disallowed-tools Bash(git commit),mcp__github__*` |  |
+| `-m`, \`\`---mcp-config="" \`\`\`file""="" # Load MCP servers from a JSON file | `$claude \--mcp-config mcp-servers.json` |  |
+| `-P`, ``\---permission-prompt-tool="XXX"` # MCP tool for handling permission prompts (only with`` \---print="" \`\`\` ) | \`$claude --permission-prompt-tool mcp\_\_auth\_\_prompt' |  |
+
+For a complete list of CLI options and features, see the [CLI usage](https://docs.anthropic.com/en/docs/claude-code/cli-usage) documentation.
+
+## Output formats
+
+The SDK supports multiple output formats:
+
+### Text output (default)
+
+Returns just the response text:
+
+```bash
+$ claude -p 'Explain file src/components/Header.tsx'
+# Output: This is a React component showing...
+```
+
+### JSON output
+
+Returns structured data including metadata:
+
+```bash
+$ claude -p 'How does the data layer work?' --output-format json
+```
+
+Response format:
+
+```json
+{
+  "type": "result",
+  ...
+}
+```
