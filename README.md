@@ -2,6 +2,8 @@
 
 Run ML experiments automatically with Claude Code analyzing and improving results iteratively.
 
+Better version using OpenRouter: https://github.com/killerstorm/auto-ml-runner
+
 ## Quick Start
 
 1. **You need an environment with working Python, PyTorch, Claude Code and, optionally, CUDA** Perhaps, also venv. Also, read the WARNING below.
